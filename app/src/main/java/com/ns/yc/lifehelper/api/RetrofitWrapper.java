@@ -40,10 +40,11 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class RetrofitWrapper {
 
     private static RetrofitWrapper instance;
-    private Retrofit mRetrofit;
+    private Retrofit.Builder mBuilder;
     private Gson gson;
     private final OkHttpClient.Builder builder;
 
+    private String url;
 
     public  static RetrofitWrapper getInstance(String url){
         //synchronized 避免同时调用多个接口，导致线程并发
@@ -54,6 +55,7 @@ public class RetrofitWrapper {
     }
 
     public RetrofitWrapper(String url) {
+        this.url = url;
         builder = new OkHttpClient.Builder();
 
         //拦截日志，依赖
@@ -94,18 +96,19 @@ public class RetrofitWrapper {
         gson = getJson();
         //gson = new GsonBuilder().setLenient().create();
         //获取实例
-        mRetrofit = new Retrofit
+        mBuilder = new Retrofit
                 .Builder()                                                  //设置OKHttpClient,如果不设置会提供一个默认的
-                .baseUrl(url)                                               //设置baseUrl
                 .addConverterFactory(GsonConverterFactory.create(gson))     //添加Gson转换器
                 .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
-                .client(build)
-                .build();
+                .client(build);
     }
 
+    public void setUrl(String url) {
+        this.url = url;
+    }
 
     public <T> T create(final Class<T> service) {
-        return mRetrofit.create(service);
+        return mBuilder.baseUrl(url).build().create(service);
     }
 
     private Gson getJson() {
